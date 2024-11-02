@@ -4,7 +4,12 @@ OBJETIVO:
     - Aprender a realizar extracciones que requieran una accion de click para cargar datos.
     - Introducirnos a la logica de Selenium
 CREADO POR: LEONARDO KUFFO
-ULTIMA VEZ EDITADO: 03 OCTUBRE 2024
+
+EDIT POR: ISIDRE CAÑELLAS 02/11/2024
+El cambio entre páginas en la web ya no se realiza con el botón "cargar más", ahora tenemos una lista de páginas
+Puede que fuera mejor aplicar SCRAPY para extraer información en esta web
+Modifico la estructura del código añadiendo una iteración for para acceder a cada página
+Modificio también la manera en que obtenemos la descripción de cada anuncio
 """
 
 #####
@@ -18,6 +23,8 @@ from selenium import webdriver # pip install selenium
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 # Asi podemos setear el user-agent en selenium
 opts = Options()
@@ -42,33 +49,42 @@ except:
 
 sleep(10)
 
-# Busco el boton para cargar mas informacion
-boton = driver.find_element(By.XPATH, '//button[@data-aut-id="btnLoadMore"]')
-for i in range(1): # Voy a darle click en cargar mas 3 veces
+#El formato de la página ha cambiado, ya no tenemos el botón "cargar mas"
+#El nuevo formato es una lista de páginas con nuevos botones de "previous"; "next"; "1"; "2"; etc.
+#Podemos hacer un for de tres iteraciones y dentro del for extraer la información necesaria
+for i in range(3):
     try:
-        # le doy click
+        print('\nPAGINA: ', i + 1, '\n\n')
+        # Encuentro cual es el XPATH de cada elemento donde esta la informacion que quiero extraer
+        # Esto es una LISTA. Por eso el metodo esta en plural
+        # Esperar hasta que al menos un anuncio esté cargado antes de proceder
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//li[@data-aut-id="itemBox2"]'))
+        )
+        autos = driver.find_elements(By.XPATH, '//li[@data-aut-id="itemBox2"]')
+
+        # Recorro cada uno de los anuncios que he encontrado
+        for auto in autos:
+            try:
+                #print('Checkpoint2')
+                # Por cada anuncio hallo el precio
+                precio = driver.find_element(By.XPATH, './/span[@data-aut-id="itemPrice"]').text
+                print (precio)
+                # Por cada anuncio hallo la descripcion
+                # Cambiamos el xpath según el elemento de la nueva página para coger los "Item Details"
+                descripcion = auto.find_element(By.XPATH, './/div[@data-aut-id="itemDetails"]').text
+                print (descripcion)
+            except Exception as e:
+                print ('Anuncio carece de precio o descripcion')
+
+        #Pasamos a la nueva página con el boton "Next"
+        boton = driver.find_element(By.XPATH, '//a[@data-aut-id="arrowRight"]')
         boton.click()
         # espero que cargue la informacion dinamica
         sleep(random.uniform(10.0, 15.0))
-        # busco el boton nuevamente para darle click en la siguiente iteracion
-        boton = driver.find_element(By.XPATH, '//button[@data-aut-id="btnLoadMore"]')
     except Exception as e:
+        print('Error en la iteración de páginas:')
         print(e)
-        # si hay algun error, rompo el lazo. No me complico.
         break
 
-# Encuentro cual es el XPATH de cada elemento donde esta la informacion que quiero extraer
-# Esto es una LISTA. Por eso el metodo esta en plural
-autos = driver.find_elements(By.XPATH, '//li[@data-aut-id="itemBox2"]')
-
-# Recorro cada uno de los anuncios que he encontrado
-for auto in autos:
-    try:
-        # Por cada anuncio hallo el precio
-        precio = auto.find_element(By.XPATH, './/span[@data-aut-id="itemPrice"]').text
-        print (precio)
-        # Por cada anuncio hallo la descripcion
-        descripcion = auto.find_element(By.XPATH, './/span[@data-aut-id="itemTitle"]').text
-        print (descripcion)
-    except Exception as e:
-        print ('Anuncio carece de precio o descripcion')
+print('Final de la iteración sin errores')
