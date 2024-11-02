@@ -42,12 +42,16 @@ driver.get('https://www.google.com/maps/place/Restaurante+Amazonico/@40.423706,-
 sleep(random.uniform(1.0, 2.0))
 
 # Debemos darle click al boton de disclaimer de cookies que no interrumpa nuestras acciones
+# El botón se puede llamar "Accept all" o "Acetpar todo" en función de la lengua del navegador
+# Podemos cambiar el nombre del botón o copiar directamente el nombre de la "class"
 try: # Encerramos todo en un try catch para que si no aparece el discilamer, no se caiga el codigo
-  disclaimer = driver.find_element(By.XPATH, '//span[text()="Accept all"]')
+  disclaimer = driver.find_element(By.XPATH, '//button[contains(@class, "VfPpkd-LgbsSe VfPpkd-LgbsSe-OWXEXe-k8QpJ VfPpkd-LgbsSe-OWXEXe-dgl2Hf nCP5yc AjY5Oe DuMIQc LQeN7 XWZjwc")]')
+  #disclaimer = EC.element_to_be_clickable((By.XPATH, '//button[@aria-label="Aceptar todo"]'))
   disclaimer.click() # lo obtenemos y le damos click
 except Exception as e:
   print (e) 
   None
+
 
 sleep(random.uniform(1.0, 2.0))
 
